@@ -4,9 +4,11 @@ import useAuth from "../hooks/useAuth";
 export default function AuthPage() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const [authType, setAuthType] = useState("Login");
 
     const { login } = useAuth();
 
+    // Function : Handle login
     const handleLogin = async () => {
         try {
             await login(username, password);
@@ -15,12 +17,18 @@ export default function AuthPage() {
         }
     };
 
+    // Function : Change auth type
+    const changeType = () => {
+        setAuthType(authType == "Login" ? "Register" : "Login");
+    }
+
     return (
         <div>
-            <h1>Login</h1>
             <input type="text" placeholder="Username" onChange={(e) => setUsername(e.target.value)} />
             <input type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
-            <button onClick={handleLogin}>Login</button>
+
+            <button onClick={handleLogin}>{authType}</button>
+            <button onClick={changeType}>Change to {authType == "Login" ? "Register" : "Login"}</button>
         </div>
     );
 }
