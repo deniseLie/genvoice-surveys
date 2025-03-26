@@ -1,11 +1,11 @@
-
-import './App.css';
+import { AuthProvider } from "./context/AuthContext";
+import Home from "./screen/Home";
 
 function App() {
   return (
-    <div className="App">
-      
-    </div>
+    <AuthProvider>
+      <Home />
+    </AuthProvider>
   );
 }
 
