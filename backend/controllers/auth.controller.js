@@ -1,56 +1,93 @@
+// controllers/user.controller.js
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 
-exports.login = async (req, res) => {
-  const { username, password } = req.body;
-  
-  try {
-    // Check for predefined users
-    if (username === 'admin' && password === 'adminpassword123!') {
-      const token = jwt.sign({ username, role: 'admin' }, process.env.JWT_SECRET);
-      return res.json({ token, user: { username, role: 'admin' } });
+// REGISTER
+const register = async (req, res) => {
+    try {
+        const { username, password } = req.body;
+
+        // Check if user exists
+        const existingUser = await User.findOne({ username });
+        if (existingUser) {
+            return res.status(400).json({ message: 'Username already exists' });
+        }
+
+        // Create new user
+        const user = new User({ username, password });
+        await user.save();
+
+        // Generate JWT token
+        const token = jwt.sign(
+            { id: user._id, role: user.role },
+            process.env.JWT_SECRET,
+            { expiresIn: '1hr' }
+        );
+
+        return res.status(201).json({
+            message: 'User created successfully',
+            user: {
+                id: user._id,
+                username: user.username,
+                role: user.role
+            },
+            token
+        });
+    } catch (e) {
+        res.status(500).json({ message: 'Registration failed', error: e.message });
     }
-    
-    for (let i = 1; i <= 3; i++) {
-      if (username === `user${i}` && password === 'Userpassword123!') {
-        const token = jwt.sign({ username, role: 'user' }, process.env.JWT_SECRET);
-        return res.json({ token, user: { username, role: 'user' } });
-      }
-    }
-    
-    // Check database for other users
-    const user = await User.findOne({ username });
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
-    
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
-    
-    const token = jwt.sign({ username, role: user.role }, process.env.JWT_SECRET);
-    res.json({ token, user: { username, role: user.role } });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
 };
 
-exports.register = async (req, res) => {
-  const { username, password } = req.body;
-  
-  try {
-    const existingUser = await User.findOne({ username });
-    if (existingUser) {
-      return res.status(400).json({ message: 'Username already exists' });
+// LOGIN
+const login = async (req, res) => {
+    try {
+        const { username, password } = req.body;
+
+        // Find user
+        const user = await User.findOne({ username });
+        if (!user) {
+            return res.status(401).json({ message: 'Authentication failed' });
+        }
+
+        // Check password
+        const isMatch = await user.comparePassword(password);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Authentication failed' });
+        }
+
+        // Generate JWT token
+        const token = jwt.sign(
+            { id: user._id, role: user.role },
+            process.env.JWT_SECRET,
+            { expiresIn: '1hr' }
+        );
+
+        return res.json({
+            message: 'Login successful',
+            user: {
+                id: user._id,
+                username: user.username,
+                role: user.role
+            },
+            token
+        });
+    } catch (e) {
+        res.status(500).json({ message: 'Login failed', error: e.message });
     }
-    
-    const newUser = new User({ username, password });
-    await newUser.save();
-    
-    const token = jwt.sign({ username, role: newUser.role }, process.env.JWT_SECRET);
-    res.status(201).json({ token, user: { username, role: newUser.role } });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+};
+
+const logout = async (req, res) => {
+    try {
+        localStorage.removeItem('token');  // Remove the token
+        window.location.href = '/login';
+        return res.json({ message: "Login successful "});
+    } catch (e) {
+        res.status(500).json({ message: 'Logout failed', error: e.message });
+    }
+}
+
+module.exports = {
+    register,
+    login,
+    logout
 };

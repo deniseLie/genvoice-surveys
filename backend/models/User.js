@@ -22,13 +22,17 @@ const UserSchema = new mongoose.Schema({
     }
 });
 
+// Hash password before saving
 UserSchema.pre('save', async function(next) {
+
+    // If password change, hash with 10 salt rounds
     if (this.isModified('password')) {
         this.password = await bcrypt.hash(this.password, 10);
     }
     next();
 });
 
+// 
 UserSchema.methods.comparePassword = async function(password) {
     return await bcrypt.compare(password, this.password);
 };
