@@ -11,6 +11,11 @@ export default function AuthPage() {
 
     // Function : Handle login
     const handleLogin = async () => {
+        if (!passwordValidate(password)) {
+            setError("Password must be at least 8 characters long and contain at least one symbol.");
+            return;
+        }
+
         try {
             setError("");
             if (authType == "Login") await login(username, password);

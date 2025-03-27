@@ -1,6 +1,5 @@
 import { apiService, setAuthToken } from "./apiService";
 
-
 export const authService = {
     register: async (username, password) => {
         try {
