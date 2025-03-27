@@ -12,10 +12,10 @@ const apiClient = axios.create({
 export const setAuthToken = (token) => {
     if (token) {
         localStorage.setItem("authToken", token);
-        apiClient.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+        apiClient.defaults.headers["Authorization"] = `Bearer ${token}`;
     } else {
         localStorage.removeItem("authToken");
-        delete apiClient.defaults.headers.common["Authorization"];
+        delete apiClient.defaults.headers["Authorization"];
     }
 };
 

@@ -1,12 +1,26 @@
-import { createContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { authService } from '../services/authService';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
+    const [user, setUser] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const storedUser = localStorage.getItem("user");
+            return storedUser ? JSON.parse(storedUser) : null;
+        }
+        return null;
+    });
     const router = useRouter();
+
+    useEffect(() => {
+        if (user) {
+            localStorage.setItem("user", JSON.stringify(user));
+        } else {
+            localStorage.removeItem("user");
+        }
+    }, [user]);
 
     // LOGIN 
     const login = async (username, password) => {
@@ -41,6 +55,7 @@ export const AuthProvider = ({ children }) => {
         try {
             await authService.logout();
             setUser(null);
+            localStorage.removeItem("user"); // Clear stored user
             router.push("/auth");
         } catch (error) {
             console.log("Logout failed:", error);
