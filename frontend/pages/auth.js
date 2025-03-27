@@ -5,30 +5,47 @@ export default function AuthPage() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [authType, setAuthType] = useState("Login");
+    const [error, setError] = useState("");
 
     const { login } = useAuth();
 
     // Function : Handle login
     const handleLogin = async () => {
         try {
+            setError("");
             await login(username, password);
         } catch (error) {
-            alert("Login failed");
+            setError(error.message || "Login failed. Please try again.");
         }
     };
 
     // Function : Change auth type
     const changeType = () => {
         setAuthType(authType == "Login" ? "Register" : "Login");
+        setError("");
     }
 
     return (
         <div>
-            <input type="text" placeholder="Username" onChange={(e) => setUsername(e.target.value)} />
-            <input type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
+            <input 
+                type="text" 
+                placeholder="Username" 
+                value={username}
+                onChange={(e) => setUsername(e.target.value)} 
+            />
+            <input 
+                type="password" 
+                placeholder="Password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)} 
+            />
 
             <button onClick={handleLogin}>{authType}</button>
-            <button onClick={changeType}>Change to {authType == "Login" ? "Register" : "Login"}</button>
+            <button onClick={changeType}>
+                Change to {authType == "Login" ? "Register" : "Login"}
+            </button>
+
+            {error && <p style={{ color: "red" }}>{error}</p>}
         </div>
     );
 }
