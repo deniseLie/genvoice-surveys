@@ -5,14 +5,34 @@ import { authService } from '../services/authService';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(() => {
-        if (typeof window !== 'undefined') {
-            const storedUser = localStorage.getItem("user");
-            return storedUser ? JSON.parse(storedUser) : null;
-        }
-        return null;
-    });
+    
     const router = useRouter();
+
+    const [user, setUser] = useState(null);
+    const [authToken, setAuthToken] = useState(null);
+
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const storedUser = localStorage.getItem("user");
+            setUser(storedUser ? JSON.parse(storedUser) : null);
+        }
+
+        if (typeof window !== "undefined") {
+            setAuthToken(localStorage.getItem("authToken") || null);
+        }
+    }, []);
+    
+    // Sync token with axios default headers
+    useEffect(() => {
+        setAuthToken(authToken); // Set token in API client
+    }, [authToken]);
+
+    // Auto-logout if no token
+    useEffect(() => {
+        if (!authToken) {
+            logout();
+        }
+    }, [authToken]);
 
     useEffect(() => {
         if (user) {
@@ -27,7 +47,10 @@ export const AuthProvider = ({ children }) => {
         try {
             const userData = await authService.login(username, password);
             if (!userData) return;
-            setUser(userData);
+            
+            setUser(userData?.user);
+            setAuthToken(userData?.token);
+            localStorage.setItem("authToken", userData?.token);
 
             console.log(userData)
             router.push('/');
@@ -42,7 +65,11 @@ export const AuthProvider = ({ children }) => {
         try {
             const userData = await authService.register(username, password);
             if (!userData) return;
-            setUser(userData);
+
+            setUser(userData?.user);
+            setAuthToken(userData?.token);
+            localStorage.setItem("authToken", userData?.token);
+
             router.push('/');
         } catch (error) {
             console.log("Registration failed:", error);
@@ -54,16 +81,20 @@ export const AuthProvider = ({ children }) => {
     const logout = async () => {
         try {
             await authService.logout();
-            setUser(null);
-            localStorage.removeItem("user"); // Clear stored user
-            router.push("/auth");
         } catch (error) {
             console.log("Logout failed:", error);
+        } finally {
+            setUser(null);
+            setAuthToken(null);
+            localStorage.removeItem("user");
+            localStorage.removeItem("authToken");
+            router.push("/auth");
         }
     }
 
     const value = {
         user,
+        authToken,
         isAuthenticated: !!user,
         login, 
         register,

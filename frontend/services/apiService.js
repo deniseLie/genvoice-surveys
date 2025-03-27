@@ -1,4 +1,5 @@
 import axios from "axios";
+import { logout } from '../services/authService';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -17,7 +18,7 @@ const apiClient = axios.create({
 //     return config;
 // });
 
-// Function to set the Bearer token
+// Function : set the Bearer token
 export const setAuthToken = (token) => {
     if (token) {
         localStorage.setItem("authToken", token);

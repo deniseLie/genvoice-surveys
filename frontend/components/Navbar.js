@@ -19,7 +19,7 @@ export default function Navbar() {
             <div className="flex space-x-4">
                 
                 <Link href="/" className="text-white">Home</Link>
-                {currentUser?.user?.role == 'admin' && 
+                {currentUser?.role == 'admin' && 
                     <Link href="/admin-dashboard" className="text-white">Admin</Link>
                 }
                 <Link href="/settings" className="text-white">Settings</Link>
