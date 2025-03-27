@@ -1,4 +1,4 @@
-import { apiService, setAuthToken } from "./apiService";
+import { apiService } from "./apiService";
 
 export const adminService = {
     

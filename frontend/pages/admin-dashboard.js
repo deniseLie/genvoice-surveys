@@ -18,6 +18,7 @@ const AdminDashboard = () => {
     try {
       const data = await adminService.getAllUsers();
       setUsers(data);
+      console.log('fetch users', data);
     } catch (e) {
       console.log('error fetching users for adming dashboard', e);
     }
@@ -124,11 +125,11 @@ const AdminDashboard = () => {
             </tr>
           </thead>
           <tbody>
-            {users.map((user) => (
-              <tr key={user.id}>
+            {users.map((user, index) => (
+              <tr key={index}>
 
                 {/* USER ID */}
-                <td>{user.id}</td>
+                <td>{index + 1}</td>
                 
                 {/* USERNAME */}
                 <td>
