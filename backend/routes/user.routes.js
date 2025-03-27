@@ -1,17 +1,17 @@
 const express = require('express');
 const router = express.Router();
-
-const { updateUsername, updatePassword, deleteUser } = require('../controllers/user.controller');
+const {
+  updateUsername,
+  updatePassword,
+  deleteUser,
+} = require('../controllers/user.controller');
 
 const verifyJWT = require('../middleware/verifyJWT');
+const verifyAdmin = require('../middleware/verifyAdmin');
 
-// edit username
-router.put('/:userId/username', verifyJWT, updateUsername);
-
-// change-password
-router.put('/:userId/password', verifyJWT, updatePassword);
-
-// delete account
-router.delete('/:userId', verifyJWT, deleteUser);
+// User self-management routes (protected by verifyJWT)
+router.put('/username', verifyJWT, updateUsername); 
+router.put('/password', verifyJWT, updatePassword); 
+router.delete('/', verifyJWT, deleteUser); 
 
 module.exports = router;

@@ -1,26 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const { createUser, getAllUsers, getUserById, updateUsername, updatePassword, deleteUser } = require('../controllers/user.controller');
+const {
+  createUser,
+  getAllUsers,
+  getUserById,
+  updateUserAsAdmin,
+  deleteUserAsAdmin
+} = require('../controllers/user.controller');
 
 const verifyJWT = require('../middleware/verifyJWT');
-const adminCheck = require('../middleware/verifyAdmin');
+const verifyAdmin = require('../middleware/verifyAdmin');
 
-// Create a new user (admin)
-router.post('/create', createUser);
-
-// Get all users 
-router.get('/', verifyJWT, adminCheck, getAllUsers);
-
-// Get a user by userId 
-router.get('/:userId', verifyJWT, getUserById);
-
-// update username
-router.put('/:userId/username', verifyJWT, updateUsername);
-
-// reset user password
-router.put('/:userId/password', verifyJWT, updatePassword);
-
-// delete user (admin)
-router.delete('/:userId', verifyJWT, deleteUser);
+// Admin-only routes
+router.post('/users', verifyJWT, verifyAdmin, createUser);
+router.get('/users', verifyJWT, verifyAdmin, getAllUsers);
+router.get('/users/:userId', verifyJWT, verifyAdmin, getUserById);
+router.put('/users/:userId', verifyJWT, verifyAdmin, updateUserAsAdmin); 
+router.delete('/users/:userId', verifyJWT, verifyAdmin, deleteUserAsAdmin); 
 
 module.exports = router;

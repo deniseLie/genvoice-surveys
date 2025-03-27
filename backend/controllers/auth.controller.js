@@ -76,11 +76,10 @@ const login = async (req, res) => {
     }
 };
 
-const logout = async (req, res) => {
+// LOGOUT
+const logout = (req, res) => {
     try {
-        localStorage.removeItem('token');  // Remove the token
-        window.location.href = '/login';
-        return res.json({ message: "Login successful "});
+        return res.json({ message: "Logout successful"});
     } catch (e) {
         res.status(500).json({ message: 'Logout failed', error: e.message });
     }

@@ -31,7 +31,7 @@ mongoose.connect(process.env.MONGODB_URI)
 });
 
 // Routes
-app.use('/', authRoutes);
+app.use('', authRoutes);
 app.use('/users', userRoutes);
 app.use('/admin', adminRoutes);
 app.use('/surveys', surveyRoutes);

@@ -7,6 +7,11 @@ const createUser = async (req, res) => {
     try {
         const { username, password, role } = req.body;
 
+        // Validate input
+        if (!username || !password) {
+            return res.status(400).json({ message: 'Username and password are required' });
+        }
+
         // Check if user exists
         const existingUser = await User.findOne({ username });
         if (existingUser) {
@@ -14,7 +19,7 @@ const createUser = async (req, res) => {
         }
 
         // Create new user
-        const user = new User({ username, password, role });
+        const user = new User({ username, password, role: role || 'user' });
         await user.save();
 
         res.status(201).json({
@@ -40,12 +45,12 @@ const getAllUsers = async (req, res) => {
     }
 };
 
-// Get single user by ID
+// Get single user by ID (admin)
 const getUserById = async (req, res) => {
     try {
         const user = await User.findById(req.params.userId).select('-password');
         if (!user) {
-        return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ message: 'User not found' });
         }
         res.json(user);
     } catch (error) {
@@ -60,18 +65,18 @@ const updateUsername = async (req, res) => {
         
         // Check if new username already exists
         const existingUser = await User.findOne({ username });
-        if (existingUser && existingUser._id.toString() !== req.params.userId) {
-        return res.status(400).json({ message: 'Username already taken' });
+        if (existingUser) {
+            return res.status(400).json({ message: 'Username already taken' });
         }
 
         const user = await User.findByIdAndUpdate(
-        req.params.userId,
-        { username },
-        { new: true }
+            req.user.id,
+            { username },
+            { new: true }
         ).select('-password');
 
         if (!user) {
-        return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ message: 'User not found' });
         }
 
         res.json({ message: 'Username updated successfully', user });
@@ -84,16 +89,16 @@ const updateUsername = async (req, res) => {
 const updatePassword = async (req, res) => {
     try {
         const { currentPassword, newPassword } = req.body;
-        const user = await User.findById(req.params.userId);
+        const user = await User.findById(req.user.id);
 
         if (!user) {
-        return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ message: 'User not found' });
         }
 
         // Verify current password
         const isMatch = await user.comparePassword(currentPassword);
         if (!isMatch) {
-        return res.status(401).json({ message: 'Current password is incorrect' });
+            return res.status(401).json({ message: 'Current password is incorrect' });
         }
 
         // Update password
@@ -106,14 +111,53 @@ const updatePassword = async (req, res) => {
     }
 };
 
-// Delete user
+// update user detail (username, role)
+const updateUserAsAdmin = async (req, res) => {
+    try {
+      const { username, role } = req.body;
+      const updates = {};
+  
+      if (username) updates.username = username;
+      if (role) updates.role = role;
+  
+      const user = await User.findByIdAndUpdate(
+        req.params.userId,
+        updates,
+        { new: true }
+      ).select('-password');
+  
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+  
+      res.json({ message: 'User updated successfully', user });
+    } catch (error) {
+      res.status(500).json({ message: 'Error updating user', error: error.message });
+    }
+};
+
+// Delete user (themselves)
 const deleteUser = async (req, res) => {
+    try {
+        const user = await User.findByIdAndDelete(req.user.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.json({ message: 'Your account has been deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: 'Error deleting user', error: error.message });
+    }
+};
+
+// Admin can delete any user
+const deleteUserAsAdmin = async (req, res) => {
     try {
         const user = await User.findByIdAndDelete(req.params.userId);
         if (!user) {
-        return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ message: 'User not found' });
         }
-        res.json({ message: 'User deleted successfully' });
+
+        res.json({ message: 'User deleted successfully by admin' });
     } catch (error) {
         res.status(500).json({ message: 'Error deleting user', error: error.message });
     }
@@ -125,5 +169,7 @@ module.exports = {
   getUserById,
   updateUsername,
   updatePassword,
-  deleteUser
+  updateUserAsAdmin,
+  deleteUser,
+  deleteUserAsAdmin
 };
