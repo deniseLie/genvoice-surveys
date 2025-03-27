@@ -7,15 +7,18 @@ export default function AuthPage() {
     const [authType, setAuthType] = useState("Login");
     const [error, setError] = useState("");
 
-    const { login } = useAuth();
+    const { login, register } = useAuth();
 
     // Function : Handle login
     const handleLogin = async () => {
         try {
             setError("");
-            await login(username, password);
+            if (authType == "Login") await login(username, password);
+            else                     await register(username, password);
         } catch (error) {
-            setError(error.message || "Login failed. Please try again.");
+            setError(error?.message);
+            console.log(error);
+            // setError(`${authType} failed. Please try again.`);
         }
     };
 

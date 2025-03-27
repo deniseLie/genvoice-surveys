@@ -10,8 +10,16 @@ const adminRoutes = require('./routes/admin.routes');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Cors option
+const corsOptions = {
+    origin: "http://localhost:3000", // Allow frontend origin
+    credentials: true, // Allow cookies and authorization headers
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    allowedHeaders: "Content-Type,Authorization"
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Load environment variables

@@ -8,6 +8,17 @@ const apiClient = axios.create({
     withCredentials: true,
 })
 
+// Function to set the Bearer token
+export const setAuthToken = (token) => {
+    if (token) {
+        localStorage.setItem("authToken", token);
+        apiClient.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    } else {
+        localStorage.removeItem("authToken");
+        delete apiClient.defaults.headers.common["Authorization"];
+    }
+};
+
 export const apiService = {
     get : (url, params = {})    => apiClient.get(url, { params }),
     post: (url, data)           => apiClient.post(url, data),

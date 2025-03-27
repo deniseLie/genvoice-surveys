@@ -11,12 +11,12 @@ export default function Navbar() {
                 <Link href="/" className="text-white">Home</Link>
                 {user?.isAdmin && <Link href="/admin" className="text-white">Admin</Link>}
                 <Link href="/settings" className="text-white">Settings</Link>
-                
-                {user ? (
+                <button onClick={logout} className="text-white">Logout</button>
+                {/* {user ? (
                     <button onClick={logout} className="text-white">Logout</button>
                 ) : (
                     <Link href="/auth" className="text-white">Login</Link>
-                )}
+                )} */}
             </div>
         </nav>
     );

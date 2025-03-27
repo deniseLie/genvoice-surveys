@@ -83,7 +83,7 @@ describe('Authentication System', () => {
             });
 
         expect(res.statusCode).toEqual(401);
-        expect(res.body).toHaveProperty('message', 'Authentication failed');
+        expect(res.body).toHaveProperty('message', 'Incorrect username or password');
         });
 
         // reject non existing username
@@ -96,7 +96,7 @@ describe('Authentication System', () => {
             });
 
         expect(res.statusCode).toEqual(401);
-        expect(res.body).toHaveProperty('message', 'Authentication failed');
+        expect(res.body).toHaveProperty('message', 'Incorrect username or password');
         });
     });
 

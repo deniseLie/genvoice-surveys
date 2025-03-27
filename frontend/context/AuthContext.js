@@ -12,10 +12,13 @@ export const AuthProvider = ({ children }) => {
     const login = async (username, password) => {
         try {
             const userData = await authService.login(username, password);
+            if (!userData) return;
             setUser(userData);
+
+            console.log(userData)
             router.push('/');
         } catch (error) {
-            console.error("Login failed:", error);
+            console.log("Login failed:", error);
             throw error;
         }
     };
@@ -24,10 +27,11 @@ export const AuthProvider = ({ children }) => {
     const register = async (username, password) => {
         try {
             const userData = await authService.register(username, password);
+            if (!userData) return;
             setUser(userData);
             router.push('/');
         } catch (error) {
-            console.error("Registration failed:", error);
+            console.log("Registration failed:", error);
             throw error;
         }
     };
@@ -39,7 +43,7 @@ export const AuthProvider = ({ children }) => {
             setUser(null);
             router.push("/auth");
         } catch (error) {
-            console.error("Logout failed:", error);
+            console.log("Logout failed:", error);
         }
     }
 
