@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }) => {
             setAuthToken(userData?.token);
             localStorage.setItem("authToken", userData?.token);
 
-            console.log(userData)
+            // console.log(userData)
             router.push('/');
         } catch (error) {
             console.log("Login failed:", error);

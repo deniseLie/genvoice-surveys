@@ -1,185 +1,194 @@
-import { useState, useRef } from 'react';
+import { useState
+  , useEffect } from 'react';
+
+import SurveyPopup from './SurveyFormPopup';
+import { surveyService } from '../services/surveyService';
+import { useAudioRecorder } from '../hooks/useAudioRecorder';
+import RecordingButton from '../components/RecordingButton';
+import AudioPlayer from '../components/AudioPlayer';
+
 
 export default function SurveyTable() {
 
-  // Sample survey data
-  const [surveyData, setSurveyData] = useState([
-    { id: 1, q1: 'How would you describe your overall experience?', a1: null, q2: 'How would you describe your overall experience?', answer: null },
-    { id: 2, q2: 'What did you like most about our service?', answer: null }
-  ]);
+  // State
+  const [surveyData, setSurveyData] = useState([]);
+  const [showPopup, setShowPopup] = useState(false);
+  const [currentSurvey, setCurrentSurvey] = useState(null);
+  const [popupMode, setPopupMode] = useState('create');
 
-  // Refs for audio elements
-  const audioRefs = useRef({});
-  const [recordingId, setRecordingId] = useState(null);
-  const [isRecording, setIsRecording] = useState(false);
-  const mediaRecorderRef = useRef(null);
-  const audioChunksRef = useRef([]);
+  // Hook
+  const { recordingId, isRecording, startRecording, stopRecording } = useAudioRecorder();
 
-  // Function : Start Recording
-  const startRecording = (id) => {
-    setRecordingId(id);
-    audioChunksRef.current = [];
-    
-    // Access user's microphone
-    navigator.mediaDevices.getUserMedia({ audio: true })
-      .then(stream => {
+  useEffect(() => {
+    fetchSurveys();
+  }, [])
+  
+  // Function:  Fetch survey data
+  const fetchSurveys = async() => {
+    try {
+      const res = await surveyService.getAllSurveys();
+      setSurveyData(res);
+      console.log(res);
+    } catch (e) {
+      console.log('error fetching surveys', e);
+    }
+  }
 
-        // Create new MediaRecorder instance and start recording
-        mediaRecorderRef.current = new MediaRecorder(stream);
-        mediaRecorderRef.current.start();
-        setIsRecording(true);
-
-        // Collect audio data when available
-        mediaRecorderRef.current.ondataavailable = (e) => {
-          audioChunksRef.current.push(e.data);
-        };
-
-        // When recording stop, create Blob with audio data and store
-        mediaRecorderRef.current.onstop = () => {
-          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
-          const audioUrl = URL.createObjectURL(audioBlob);  // URL to audio blob
-          
-          // update survey data
-          setSurveyData(prev => prev.map(item => 
-            item.id === id ? { ...item, answer: audioUrl } : item
-          ));
-          
-          // Stop all media track (release microphone access)
-          stream.getTracks().forEach(track => track.stop());
-        };
-      })
-
-      // Handle any error if microphone is not accessible
-      .catch(err => {
-        console.error('Error accessing microphone:', err);
-      });
+  // Handle create new survey button
+  const handleCreate = () => {
+    setPopupMode('create');
+    setCurrentSurvey(null);
+    setShowPopup(true);
   };
 
-  // Function : Stop recording
-  const stopRecording = () => {
-      if (mediaRecorderRef.current && isRecording) {
-        mediaRecorderRef.current.stop();
-        setIsRecording(false);
-        setRecordingId(null);
-      }
+  // Handle edit survey button
+  const handleEdit = (survey) => {
+    setPopupMode('edit');
+    setCurrentSurvey(survey);
+    setShowPopup(true);
   };
 
-  // Function : Play recorded audio of sepcific question
-  const playRecording = (id) => {
-      if (audioRefs.current[id]) {
-        audioRefs.current[id].play();
-      }
+  // Handle save from popup
+  const handleSave = (savedSurvey) => {
+    if (popupMode === 'create') {
+      setSurveyData(prev => [...prev, savedSurvey]);
+    } else {
+      setSurveyData(prev => 
+        prev.map(item => item.id === savedSurvey.id ? savedSurvey : item)
+      );
+    }
   };
 
   // Function : Delete Survey
-  const deleteSurvey = () => {
+  const deleteSurvey = async (item) => {
     try {
-      
+      await surveyService.deleteSurvey(item._id);
+      setSurveyData(prev => prev.filter(item => item.id !== item._id));
     } catch (e) {
-      console.log('delete survey error:', e?.response?.data);
+      console.log('delete survey error:', e);
     }
   }
 
   return (
     <div className="p-4 max-w-4xl mx-auto">
         <h2 className="text-2xl font-bold mb-6 text-center">Survey Responses</h2>
-        
-        <table className="w-full border border-collapse">
-            <thead>
-                <tr className="bg-gray-100">
-                    <th className="p-3 text-left border">Q1</th>
-                    <th className="p-3 text-left border">Answer1</th>
-                    <th className="p-3 text-left border">Q2</th>
-                    <th className="p-3 text-left border">Answer2</th>
-                    <th className="p-3 text-left border">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
 
-            {surveyData.map((item) => (
-              <tr key={item.id} className="border-b hover:bg-gray-50">
+        {/* Create new survey */}
+        <button
+          onClick={handleCreate}
+          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+        >
+          Create New Survey
+        </button>
 
-                {/* Question 1 */}
-                <td className="p-3 border">{item.q1}</td>
-                <td className="p-3 border">
-                    {recordingId === item.id && isRecording ? (
-                      <button
-                          onClick={stopRecording}
-                          className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                      >
-                          Stop Recording
-                      </button>
-                    ) : (
-                      <button
-                          onClick={() => startRecording(item.id)}
-                          disabled={isRecording}
-                          className={`px-3 py-1 rounded ${isRecording ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
-                      >
+        {/* TABLE */}
+        {surveyData?.length == 0 ? (
+          <h4>No Survey Entry</h4>
+        ) : (
+          <table className="w-full border border-collapse">
+              <thead>
+                  <tr className="bg-gray-100">
+                      <th className="p-3 text-left border">Question 1</th>
+                      <th className="p-3 text-left border">Answer 1</th>
+                      <th className="p-3 text-left border">Question 2</th>
+                      <th className="p-3 text-left border">Answer 2</th>
+                      <th className="p-3 text-left border">Actions</th>
+                  </tr>
+              </thead>
+              <tbody>
+
+              {/* ENTRIES */}
+              {surveyData.map((item, index) => (
+                <tr key={index} className="border-b hover:bg-gray-50">
+
+                  {/* Question 1 */}
+                  <td className="p-3 border">{item.question1}</td>
+                  <td className="p-3 border">
+                      {recordingId === item.id && isRecording ? (
+                        <button
+                            onClick={stopRecording}
+                            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                        >
+                            Stop Recording
+                        </button>
+                      ) : (
+                        <button
+                            onClick={() => startRecording(item.id)}
+                            disabled={isRecording}
+                            className={`px-3 py-1 rounded ${isRecording ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
+                        >
+                            Record Answer
+                        </button>
+                      )}
+                      {item.answer && (
+                        <button
+                            onClick={() => playRecording(item.id)}
+                            className="ml-2 bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
+                        >
+                            Play
+                        </button>
+                      )}
+                  </td>
+
+                  {/* Question 2 */}
+                  <td className="p-3 border">{item.q2}</td>
+                  <td className="p-3 border">
+                      {recordingId === item.id && isRecording ? (
+                        <button
+                            onClick={stopRecording}
+                            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                        >
+                            Stop Recording
+                        </button>
+                      ) : (
+                        <button
+                            onClick={() => startRecording(item.id)}
+                            disabled={isRecording}
+                            className={`px-3 py-1 rounded ${isRecording ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
+                        >
                           Record Answer
-                      </button>
-                    )}
-                    {item.answer && (
-                      <button
-                          onClick={() => playRecording(item.id)}
-                          className="ml-2 bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
-                      >
-                          Play
-                      </button>
-                    )}
-                </td>
+                        </button>
+                      )}
+                      {item.answer && (
+                        <button
+                            onClick={() => playRecording(item.id)}
+                            className="ml-2 bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
+                        >
+                            Play
+                        </button>
+                      )}
+                  </td>
 
-                {/* Question 2 */}
-                <td className="p-3 border">{item.q2}</td>
-                <td className="p-3 border">
-                    {recordingId === item.id && isRecording ? (
-                      <button
-                          onClick={stopRecording}
-                          className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                      >
-                          Stop Recording
-                      </button>
-                    ) : (
-                      <button
-                          onClick={() => startRecording(item.id)}
-                          disabled={isRecording}
-                          className={`px-3 py-1 rounded ${isRecording ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
-                      >
-                        Record Answer
-                      </button>
-                    )}
-                    {item.answer && (
-                      <button
-                          onClick={() => playRecording(item.id)}
-                          className="ml-2 bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
-                      >
-                          Play
-                      </button>
-                    )}
-                </td>
-
-                {/* Action */}
-                <td className="p-3 border">
-                  <button
-                    onClick={deleteSurvey}
-                    className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  {/* Action */}
+                  <td className="p-3 border">
+                    <button
+                      onClick={() => handleEdit(item)}
+                      className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 mr-2"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => deleteSurvey(item)}
+                      className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
           
-        {/* Recording status message */}
-        <div className="mt-4 text-sm text-gray-500">
-            {isRecording && (
-            <div className="flex items-center">
-                <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse mr-2"></div>
-                Recording in progress (Question {recordingId})...
-            </div>
-            )}
-        </div>
+        {/* Popup for create/edit */}
+        {showPopup && (
+          <SurveyPopup
+            mode={popupMode}
+            survey={currentSurvey}
+            onClose={() => setShowPopup(false)}
+            onSave={handleSave}
+          />
+        )}
     </div>
   );
 }
