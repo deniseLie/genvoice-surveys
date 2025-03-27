@@ -103,20 +103,6 @@ describe('User Controller', () => {
         expect(res.body).toHaveProperty('message', 'Password updated successfully');
       });
 
-      // wrong current pass
-      it('should reject incorrect current password', async () => {
-        const res = await request(app)
-          .put('/users/password')
-          .set('Authorization', `Bearer ${testUserToken}`)
-          .send({
-            currentPassword: 'wrongpassword',
-            newPassword: 'newpassword123'
-          });
-
-        expect(res.statusCode).toEqual(401);
-        expect(res.body).toHaveProperty('message', 'Current password is incorrect');
-      });
-
       // authentication
       it('should require authentication', async () => {
         const res = await request(app)

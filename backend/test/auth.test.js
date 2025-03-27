@@ -11,11 +11,17 @@ describe('Authentication System', () => {
 
     // Clear users collection before tests
     beforeAll(async () => {
+        // Start server on a different port for tests
+        server = app.listen(0);
+
         await User.deleteMany({});
     });
 
     // Clean up after all tests
     afterAll(async () => {
+        // Close the server
+        await server.close();
+        
         await User.deleteMany({});
     });
 

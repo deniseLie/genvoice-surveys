@@ -1,3 +1,5 @@
+const mongoose = require('mongoose');
+
 const SurveySchema = new mongoose.Schema({
     userId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -11,15 +13,20 @@ const SurveySchema = new mongoose.Schema({
             maxlength: 500
         },
         voiceResponse: {
-            audioUrl: String,  // Store URL if hosting files separately
-            audioFile: Buffer, // Or store binary data directly
-            contentType: String,
-            duration: Number   // In seconds
+            audioUrl: { type: String }, // Store URL if hosting files separately
+            audioFile: { type: Buffer }, // Or store binary data directly
+            contentType: { type: String },
+            duration: { type: Number }, // In seconds
         },
-        // transcript: String   // Optional: store text transcript
+        transcript: { 
+            type: String, 
+            maxlength: 1000 // Optional: limit length for transcript
+        }
     }],
     createdAt: {
         type: Date,
         default: Date.now
     }
-  });
+});
+
+module.exports = mongoose.model('Survey', SurveySchema);

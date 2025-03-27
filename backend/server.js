@@ -27,16 +27,16 @@ require('dotenv').config();
 
 // Database connection
 mongoose.connect(process.env.MONGODB_URI)
-.then(() => {
-    console.log('Connected to MongoDB');
-    app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
+    .then(() => {
+        console.log('Connected to MongoDB');
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+        });
+    })
+    .catch(err => {
+        console.error('Database connection failed', err);
+        process.exit(1);
     });
-})
-.catch(err => {
-    console.error('Database connection failed', err);
-    process.exit(1);
-});
 
 // Routes
 app.use('', authRoutes);
