@@ -9,13 +9,13 @@ const apiClient = axios.create({
 })
 
 // Add a request interceptor
-apiClient.interceptors.request.use((config) => {
-    console.log("Outgoing request:", config.url);
-    console.log("Authorization Header:", config.headers.Authorization);
-    console.log(localStorage.getItem("authToken"));
+// apiClient.interceptors.request.use((config) => {
+//     console.log("Outgoing request:", config.url);
+//     console.log("Authorization Header:", config.headers.Authorization);
+//     console.log(localStorage.getItem("authToken"));
 
-    return config;
-});
+//     return config;
+// });
 
 // Function to set the Bearer token
 export const setAuthToken = (token) => {
