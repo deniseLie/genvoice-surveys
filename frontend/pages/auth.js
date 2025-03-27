@@ -1,5 +1,6 @@
 import { useState } from "react";
 import useAuth from "../hooks/useAuth";
+import { passwordValidate } from '../utils/passwordValidation';
 
 export default function AuthPage() {
     const [username, setUsername] = useState("");
