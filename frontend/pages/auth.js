@@ -35,26 +35,37 @@ export default function AuthPage() {
     }
 
     return (
-        <div>
-            <input 
-                type="text" 
-                placeholder="Username" 
-                value={username}
-                onChange={(e) => setUsername(e.target.value)} 
-            />
-            <input 
-                type="password" 
-                placeholder="Password" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)} 
-            />
-
-            <button onClick={handleLogin}>{authType}</button>
-            <button onClick={changeType}>
-                Change to {authType == "Login" ? "Register" : "Login"}
-            </button>
-
-            {error && <p style={{ color: "red" }}>{error}</p>}
+        <div className="auth-container">
+            <div className="auth-box">
+                <h2 className="auth-title">{authType}</h2>
+                <input
+                    type="text"
+                    placeholder="Username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="auth-input"
+                />
+                <input
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="auth-input"
+                />
+                <button
+                    onClick={handleLogin}
+                    className="auth-button"
+                >
+                    {authType}
+                </button>
+                <button
+                    onClick={changeType}
+                    className="auth-change-type"
+                >
+                    Change to {authType === "Login" ? "Register" : "Login"}
+                </button>
+                {error && <p className="auth-error">{error}</p>}
+            </div>
         </div>
     );
 }

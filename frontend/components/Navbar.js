@@ -1,10 +1,11 @@
-import Link from "next/link";
+import { useRouter } from 'next/router'; // Import useRouter hook
 import useAuth from "../hooks/useAuth";
 import { useEffect, useState } from "react";
 
 export default function Navbar() {
     const { user, logout } = useAuth();
     const [currentUser, setCurrentUser] = useState(null);
+    const router = useRouter(); // Initialize router for programmatic navigation
 
     useEffect(() => {
         setCurrentUser(user);
@@ -14,16 +15,22 @@ export default function Navbar() {
         return null; // Prevent rendering before user data is available
     }
 
+    // Function to handle navigation
+    const handleNavigation = (href) => {
+        router.push(href);
+    };
+
     return (
-        <nav className="bg-blue-600 p-4 flex justify-between">
-            <div className="flex space-x-4">
-                
-                <Link href="/" className="text-white">Home</Link>
-                {currentUser?.role == 'admin' && 
-                    <Link href="/admin-dashboard" className="text-white">Admin</Link>
+        <nav className="navbar">
+            <div className="navbar-links-left">
+                <button onClick={() => handleNavigation("/")} className="navbar-link button-link">Home</button>
+                {currentUser?.role === 'admin' && 
+                    <button onClick={() => handleNavigation("/admin-dashboard")} className="navbar-link button-link">Admin</button>
                 }
-                <Link href="/settings" className="text-white">Settings</Link>
-                <button onClick={logout} className="text-white">Logout</button>
+            </div>
+            <div className="navbar-links-right">
+                <button onClick={() => handleNavigation("/settings")} className="navbar-link button-link">Settings</button>
+                <button onClick={logout} className="navbar-link button-link">Logout</button>
             </div>
         </nav>
     );

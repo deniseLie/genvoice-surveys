@@ -1,0 +1,54 @@
+/* Navbar Styles */
+.navbar {
+    background-color: var(--color-primary);
+    padding: var(--spacing-sm) var(--spacing-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.navbar-links-left,
+.navbar-links-right {
+    gap: var(--spacing-md); /* Space between the links */
+}
+
+.navbar-links-left {
+    /* Align items on the left */
+}
+
+.navbar-links-right {
+    /* Align items on the right */
+    margin-left: auto; /* Pushes this section to the right */
+}
+
+/* Ensure button and link have identical styling */
+.navbar-link, .button-link {
+    color: white;
+    font-size: 1rem;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    text-decoration: none;
+    border: none; /* Remove border for button */
+    background: none; /* Remove background for button */
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.navbar-link:hover, .button-link:hover {
+    background-color: var(--color-primary-hover);
+}
+
+/* Specific button behavior */
+.navbar-link[type="button"] {
+    background-color: transparent;
+    cursor: pointer;
+    border: none;
+    padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+.navbar-link[type="button"]:hover {
+    background-color: var(--color-primary-hover);
+}

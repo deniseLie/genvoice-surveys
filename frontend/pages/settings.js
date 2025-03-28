@@ -33,35 +33,49 @@ export default function Settings() {
     };
 
     return (
-        <div>
+        <div className="settings-container">
             <Navbar />
-            <h2>Settings</h2>
+            <h2 className="settings-title">Settings</h2>
 
-            {/* Display User's Username (Assuming you have a user object) */}
-            <h3>Username: {user?.username}</h3>
-            <h3>Role: {user?.role}</h3>
+            {/* Display User's Username and Role */}
+            <div className="user-info">
+                <h3>Username: {user?.username}</h3>
+                <h3>Role: {user?.role}</h3>
+            </div>
 
             {/* Change Password Section */}
             {changingPass ? (
-                <div>
+                <div className="password-change-section">
                     <input
                         type="password"
                         placeholder="New Password"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
+                        className="password-input"
                     />
-                    {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
-                    {successMessage && <p style={{ color: 'green' }}>{successMessage}</p>}
+                    {errorMessage && <p className="error-message">{errorMessage}</p>}
+                    {successMessage && <p className="success-message">{successMessage}</p>}
                     <button
                         onClick={handleChangePassword}
                         disabled={!newPassword}
+                        className="update-password-btn"
                     >
                         Update Password
                     </button>
-                    <button onClick={() => setChangingPass(false)}>Cancel</button>
+                    <button
+                        onClick={() => setChangingPass(false)}
+                        className="cancel-change-btn"
+                    >
+                        Cancel
+                    </button>
                 </div>
             ) : (
-                <button onClick={() => setChangingPass(true)}>Change Password</button>
+                <button
+                    className="change-password-btn"
+                    onClick={() => setChangingPass(true)}
+                >
+                    Change Password
+                </button>
             )}
         </div>
     );

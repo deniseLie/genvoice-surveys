@@ -70,125 +70,87 @@ export default function SurveyTable() {
   }
 
   return (
-    <div className="p-4 max-w-4xl mx-auto">
-        <h2 className="text-2xl font-bold mb-6 text-center">Survey Responses</h2>
+    <div className="survey-table-container">
+      <h2 className="survey-table-heading">Survey Responses</h2>
 
-        {/* Create new survey */}
-        <button
-          onClick={handleCreate}
-          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-        >
-          Create New Survey
-        </button>
+      {/* Create new survey */}
+      <button
+        onClick={handleCreate}
+        className="survey-table-create-btn"
+      >
+        Create New Survey
+      </button>
 
-        {/* TABLE */}
-        {surveyData?.length == 0 ? (
-          <h4>No Survey Entry</h4>
-        ) : (
-          <table className="w-full border border-collapse">
-              <thead>
-                  <tr className="bg-gray-100">
-                      <th className="p-3 text-left border">Question 1</th>
-                      <th className="p-3 text-left border">Answer 1</th>
-                      <th className="p-3 text-left border">Question 2</th>
-                      <th className="p-3 text-left border">Answer 2</th>
-                      <th className="p-3 text-left border">Actions</th>
-                  </tr>
-              </thead>
-              <tbody>
-
-              {/* ENTRIES */}
-              {surveyData.map((item, index) => (
-                <tr key={index} className="border-b hover:bg-gray-50">
-
-                  {/* Question 1 */}
-                  <td className="p-3 border">{item.question1}</td>
-                  <td className="p-3 border">
-                      {recordingId === item.id && isRecording ? (
-                        <button
-                            onClick={stopRecording}
-                            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                        >
-                            Stop Recording
-                        </button>
-                      ) : (
-                        <button
-                            onClick={() => startRecording(item.id)}
-                            disabled={isRecording}
-                            className={`px-3 py-1 rounded ${isRecording ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
-                        >
-                            Record Answer
-                        </button>
-                      )}
-                      {item.answer && (
-                        <button
-                            onClick={() => playRecording(item.id)}
-                            className="ml-2 bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
-                        >
-                            Play
-                        </button>
-                      )}
-                  </td>
-
-                  {/* Question 2 */}
-                  <td className="p-3 border">{item.q2}</td>
-                  <td className="p-3 border">
-                      {recordingId === item.id && isRecording ? (
-                        <button
-                            onClick={stopRecording}
-                            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                        >
-                            Stop Recording
-                        </button>
-                      ) : (
-                        <button
-                            onClick={() => startRecording(item.id)}
-                            disabled={isRecording}
-                            className={`px-3 py-1 rounded ${isRecording ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
-                        >
-                          Record Answer
-                        </button>
-                      )}
-                      {item.answer && (
-                        <button
-                            onClick={() => playRecording(item.id)}
-                            className="ml-2 bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
-                        >
-                            Play
-                        </button>
-                      )}
-                  </td>
-
-                  {/* Action */}
-                  <td className="p-3 border">
+      {/* TABLE */}
+      {surveyData?.length === 0 ? (
+        <h4 className="survey-table-no-entry">No Survey Entry</h4>
+      ) : (
+        <table className="survey-table">
+          <thead>
+            <tr>
+              <th>Question 1</th>
+              <th>Answer 1</th>
+              <th>Question 2</th>
+              <th>Answer 2</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {surveyData.map((item, index) => (
+              <tr key={index}>
+                <td>{item.question1}</td>
+                <td>
+                  <div className="survey-table-actions">
+                    <button
+                      onClick={() => startRecording(item.id)}
+                      disabled={isRecording}
+                      className="survey-table-record-btn"
+                    >
+                      {isRecording ? "Stop Recording" : "Record Answer"}
+                    </button>
+                    {item.answer && (
+                      <button
+                        onClick={() => playRecording(item.id)}
+                        className="survey-table-play-btn"
+                      >
+                        Play
+                      </button>
+                    )}
+                  </div>
+                </td>
+                <td>{item.q2}</td>
+                <td>
+                  <div className="survey-table-actions">
                     <button
                       onClick={() => handleEdit(item)}
-                      className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 mr-2"
+                      className="survey-table-edit-btn"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => deleteSurvey(item)}
-                      className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                      className="survey-table-delete-btn"
                     >
                       Delete
                     </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-          
-        {/* Popup for create/edit */}
-        {showPopup && (
-          <SurveyPopup
-            mode={popupMode}
-            survey={currentSurvey}
-            onClose={() => setShowPopup(false)}
-            onSave={handleSave}
-          />
-        )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      {/* Popup for create/edit */}
+      {showPopup && (
+        <SurveyPopup
+          mode={popupMode}
+          survey={currentSurvey}
+          onClose={() => setShowPopup(false)}
+          onSave={handleSave}
+        />
+      )}
     </div>
+
   );
 }

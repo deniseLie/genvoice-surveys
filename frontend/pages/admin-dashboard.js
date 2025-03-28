@@ -97,12 +97,12 @@ const AdminDashboard = () => {
 
   return (
     <AdminRoute>
-      <div>
+      <div className="admin-dashboard">
         <Navbar />
         <h1>Admin User Management</h1>
         
         {/* Create new user form */}
-        <div>
+        <div className="user-form">
           <h3>Create New User</h3>
           <input
             type="text"
@@ -130,7 +130,7 @@ const AdminDashboard = () => {
         <h3>User Accounts</h3>
 
         {/* No User */}
-        {users?.length == 0 ? (
+        {users?.length === 0 ? (
           <h4>No Users</h4>
         ) : (
           <table>
@@ -187,7 +187,7 @@ const AdminDashboard = () => {
                     ) : (
                       <>
                         <button onClick={() => handleEditUser(user)}>Edit</button>
-                        <button onClick={() => handleDeleteUser(user._id)}>Delete</button>
+                        <button onClick={() => handleDeleteUser(user._id)} className="delete">Delete</button>
                       </>
                     )}
                   </td>
@@ -197,7 +197,7 @@ const AdminDashboard = () => {
           </table>
         )}
       </div>
-    </AdminRoute> 
+    </AdminRoute>
   );
 };
 
