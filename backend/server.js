@@ -9,6 +9,7 @@ const adminRoutes = require('./routes/admin.routes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const dbURI = process.env.MONGODB_URI;
 
 // Cors option
 const corsOptions = {
@@ -30,7 +31,7 @@ app.use(express.json());
 require('dotenv').config();
 
 // Database connection
-mongoose.connect(process.env.MONGODB_URI)
+mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => {
         console.log('Connected to MongoDB');
         app.listen(PORT, () => {
