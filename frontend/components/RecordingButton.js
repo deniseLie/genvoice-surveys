@@ -1,4 +1,3 @@
-// components/RecordingButton.js
 const RecordingButton = ({ 
     isRecording, 
     onStart, 
@@ -7,6 +6,8 @@ const RecordingButton = ({
     recordingId,
     currentId
 }) => {
+
+    // Ongoing recording
     if (isRecording && recordingId === currentId) {
         return (
             <button
@@ -18,6 +19,7 @@ const RecordingButton = ({
         );
     }
 
+    // Not recording
     return (
         <button
             onClick={onStart}
