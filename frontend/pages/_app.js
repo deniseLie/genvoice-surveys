@@ -5,6 +5,7 @@ import "../styles/survey.css";
 import "../styles/adminDashboard.css";
 import "../styles/settings.css"
 import "../styles/navbar.css";
+import "../styles/AboutMe.css";
 
 export default function MyApp({ Component, pageProps }) {
     return (
