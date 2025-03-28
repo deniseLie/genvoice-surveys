@@ -13,7 +13,7 @@ const dbURI = process.env.MONGODB_URI;
 
 // Cors option
 const corsOptions = {
-    origin: "http://localhost:3000", // Allow frontend origin
+    origin: "https://genvoice-surveys.vercel.app", // Allow frontend origin
     credentials: true, // Allow cookies and authorization headers
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     allowedHeaders: "Content-Type,Authorization"
