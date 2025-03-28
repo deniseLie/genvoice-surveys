@@ -2,7 +2,7 @@ import axios from "axios";
 import { logout } from '../services/authService';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
-console.log(API_URL);
+console.log("API_URL ", API_URL);
 
 const apiClient = axios.create({
     baseURL: API_URL,
