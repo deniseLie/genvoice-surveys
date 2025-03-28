@@ -23,5 +23,6 @@ yarn-debug.log*
 yarn-error.log*
 
 # Ignore Next.js static files
+/ .next/
 .next/
 .next/static/

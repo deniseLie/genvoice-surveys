@@ -92,33 +92,35 @@ export default function SurveyPopup({ mode, survey, onClose, onSave }) {
         if (!validate()) return;
 
         try {
-        const surveyData = {
-            questions: [
-            { 
-                text: formData.question1, 
-                voiceResponse: formData.response1,
-                transcript: null 
-            },
-            { 
-                text: formData.question2, 
-                voiceResponse: formData.response2,
-                transcript: null 
-            }
-            ]
-        };
+            const surveyData = {
+                questions: [
+                    { 
+                        text: formData.question1, 
+                        voiceResponse: formData.response1 || null,
+                        transcript: null 
+                    },
+                    { 
+                        text: formData.question2, 
+                        voiceResponse: formData.response2 || null,
+                        transcript: null 
+                    }
+                ]
+            };
 
-        let result;
-        if (mode === 'edit') {
-            result = await surveyService.updateSurvey(survey._id, surveyData);
-        } else {
-            result = await surveyService.createSurvey(surveyData);
-        }
-        
-        onSave(result.data);
-        onClose();
+            console.log("Survey Data", surveyData);
+
+            let result;
+            if (mode === 'edit') {
+                result = await surveyService.updateSurvey(survey._id, surveyData);
+            } else {
+                result = await surveyService.createSurvey(surveyData);
+            }
+            
+            onSave(result);
+            onClose();
         } catch (error) {
-        console.error(`${mode === 'edit' ? 'Update' : 'Create'} survey error:`, error);
-        alert(error.message || `Failed to ${mode} survey`);
+            console.error(`${mode === 'edit' ? 'Update' : 'Create'} survey error:`, error);
+            alert(error.message || `Failed to ${mode} survey`);
         }
     };
 

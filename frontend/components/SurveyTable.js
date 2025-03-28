@@ -4,17 +4,22 @@ import { useState
 import SurveyPopup from './SurveyFormPopup';
 import { surveyService } from '../services/surveyService';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
-import RecordingButton from '../components/RecordingButton';
-import AudioPlayer from '../components/AudioPlayer';
+import SurveyAnswer from './SurveyAnswer';
 
 
 export default function SurveyTable() {
 
-  // State
+  // State : surveys
   const [surveyData, setSurveyData] = useState([]);
-  const [showPopup, setShowPopup] = useState(false);
+
+  // State : Popup (create & edit)
   const [currentSurvey, setCurrentSurvey] = useState(null);
   const [popupMode, setPopupMode] = useState('create');
+  const [showPopup, setShowPopup] = useState(false);
+
+  // State : Popup (delete)
+  const [showConfirmPopup, setShowConfirmPopup] = useState(false);
+  const [surveyToDelete, setSurveyToDelete] = useState(null);
 
   // Hook
   const { recordingId, isRecording, startRecording, stopRecording } = useAudioRecorder();
@@ -50,22 +55,26 @@ export default function SurveyTable() {
 
   // Handle save from popup
   const handleSave = (savedSurvey) => {
-    if (popupMode === 'create') {
-      setSurveyData(prev => [...prev, savedSurvey]);
-    } else {
-      setSurveyData(prev => 
-        prev.map(item => item.id === savedSurvey.id ? savedSurvey : item)
-      );
-    }
+    fetchSurveys();
   };
 
+  // Function : Confim before deleting
+  const confirmDelete = (survey) => {
+    setSurveyToDelete(survey);
+    setShowConfirmPopup(true);
+  }
+
   // Function : Delete Survey
-  const deleteSurvey = async (item) => {
+  const deleteSurvey = async () => {
+    if (!surveyToDelete) return;
     try {
-      await surveyService.deleteSurvey(item._id);
-      setSurveyData(prev => prev.filter(item => item.id !== item._id));
+      await surveyService.deleteSurvey(surveyToDelete._id);
+      fetchSurveys();
     } catch (e) {
       console.log('delete survey error:', e);
+    } finally {
+      setShowConfirmPopup(false);
+      setSurveyToDelete(null);
     }
   }
 
@@ -74,10 +83,7 @@ export default function SurveyTable() {
       <h2 className="survey-table-heading">Survey Responses</h2>
 
       {/* Create new survey */}
-      <button
-        onClick={handleCreate}
-        className="survey-table-create-btn"
-      >
+      <button onClick={handleCreate} className="survey-table-create-btn">
         Create New Survey
       </button>
 
@@ -95,42 +101,21 @@ export default function SurveyTable() {
               <th>Actions</th>
             </tr>
           </thead>
+
+          {/* ENTRIES */}
           <tbody>
             {surveyData.map((item, index) => (
               <tr key={index}>
-                <td>{item.question1}</td>
+                <td>{item?.questions[0]?.text}</td>
+                <td><SurveyAnswer voiceResponse={item?.questions[0]?.voiceResponse}/></td>
+                <td>{item?.questions[1]?.text}</td>
+                <td><SurveyAnswer voiceResponse={item?.questions[1]?.voiceResponse}/></td>
                 <td>
                   <div className="survey-table-actions">
-                    <button
-                      onClick={() => startRecording(item.id)}
-                      disabled={isRecording}
-                      className="survey-table-record-btn"
-                    >
-                      {isRecording ? "Stop Recording" : "Record Answer"}
-                    </button>
-                    {item.answer && (
-                      <button
-                        onClick={() => playRecording(item.id)}
-                        className="survey-table-play-btn"
-                      >
-                        Play
-                      </button>
-                    )}
-                  </div>
-                </td>
-                <td>{item.q2}</td>
-                <td>
-                  <div className="survey-table-actions">
-                    <button
-                      onClick={() => handleEdit(item)}
-                      className="survey-table-edit-btn"
-                    >
+                    <button onClick={() => handleEdit(item)} className="survey-table-edit-btn">
                       Edit
                     </button>
-                    <button
-                      onClick={() => deleteSurvey(item)}
-                      className="survey-table-delete-btn"
-                    >
+                    <button onClick={() => confirmDelete(item)} className="survey-table-delete-btn">
                       Delete
                     </button>
                   </div>
@@ -149,8 +134,24 @@ export default function SurveyTable() {
           onClose={() => setShowPopup(false)}
           onSave={handleSave}
         />
+      )}  
+
+      {/* Confirmation Popup for Deletion */}
+      {showConfirmPopup && (
+        <div className='confirm-popup'>
+            <div className="confirm-popup-content">
+              <h3>Are you sure you want to delete this survey?</h3>
+              <div className="confirm-popup-actions">
+                <button onClick={() => setShowConfirmPopup(false)} className="cancel-btn">
+                  Cancel
+                </button>
+                <button onClick={deleteSurvey} className="confirm-delete-btn">
+                  Delete
+                </button>
+              </div>
+            </div>
+        </div>
       )}
     </div>
-
   );
 }

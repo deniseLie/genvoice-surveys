@@ -11,6 +11,7 @@ const RecordingButton = ({
     if (isRecording && recordingId === currentId) {
         return (
             <button
+                type="button"
                 onClick={onStop}
                 className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
             >
@@ -22,6 +23,7 @@ const RecordingButton = ({
     // Not recording
     return (
         <button
+            type="button"
             onClick={onStart}
             disabled={disabled}
             className={`px-3 py-1 rounded ${
