@@ -9,18 +9,15 @@ const SurveySchema = new mongoose.Schema({
     questions: [{
         text: {
             type: String,
-            required: true,
-            maxlength: 500
+            required: true
         },
         voiceResponse: {
-            audioUrl: { type: String }, // Store URL if hosting files separately
-            audioFile: { type: Buffer }, // Or store binary data directly
+            data: { type: Buffer }, // store binary data directly
             contentType: { type: String },
             duration: { type: Number }, // In seconds
         },
         transcript: { 
             type: String, 
-            maxlength: 1000 // Optional: limit length for transcript
         }
     }],
     createdAt: {

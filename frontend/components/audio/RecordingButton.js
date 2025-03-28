@@ -1,11 +1,22 @@
+import { useEffect } from "react";
+
 const RecordingButton = ({ 
     isRecording, 
     onStart, 
     onStop, 
     disabled,
     recordingId,
-    currentId
+    currentId,
+    duration, 
+    maxDuration
 }) => {
+
+    // If duration more than max STOP.
+    useEffect(() => {
+        if (duration >= maxDuration && isRecording && recordingId === currentId) {
+          onStop();
+        }
+      }, [duration, maxDuration, isRecording, recordingId, currentId, onStop]);
 
     // Ongoing recording
     if (isRecording && recordingId === currentId) {

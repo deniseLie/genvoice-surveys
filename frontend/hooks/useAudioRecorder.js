@@ -1,15 +1,26 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 export const useAudioRecorder = () => {
 
     // STATE
     const [recordingId, setRecordingId] = useState(null);
     const [isRecording, setIsRecording] = useState(false);
+    const [duration, setDuration] = useState(0);
 
     //REF
     const mediaRecorderRef = useRef(null);
     const audioChunksRef = useRef([]);
     const streamRef = useRef(null);
+    const timerRef = useRef(null);
+
+    // CONST
+    const MAX_DURATION = 60;
+
+    useEffect(() => {
+        return () => {
+            clearInterval(timerRef.current);
+        }
+    }, [])
 
     // Function : start recording
     const startRecording = async (id) => {
@@ -37,8 +48,20 @@ export const useAudioRecorder = () => {
                 }   
             };
 
+            // Start timer
+            setDuration(0);
+            timerRef.current = setInterval(() => {
+                setDuration(prev => {
+                    if (prev >= MAX_DURATION) {
+                        stopRecording();
+                        return MAX_DURATION;
+                    }
+                    return prev + 1;
+                });
+            }, 1000);
+
             // Recording start - collect data every 100ms
-            mediaRecorderRef.current.start(100);    
+            mediaRecorderRef.current.start();    
             setIsRecording(true);
 
         } catch (err) {
@@ -96,6 +119,6 @@ export const useAudioRecorder = () => {
         recordingId,
         isRecording,
         startRecording,
-        stopRecording
+        stopRecording,
     };
 };

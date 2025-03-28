@@ -1,70 +1,99 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { surveyService } from "../../services/surveyService";
 import RecordingButton from "../audio/RecordingButton";
 import AudioPlayer from "../audio/AudioPlayer";
 import { useAudioRecorder } from "../../hooks/useAudioRecorder";
+import { compressAudioData } from "../../utils/compressAudioData";
 
 export default function SurveyPopup({ mode, survey, onClose, onSave }) {
     
-    // States
-    const [formData, setFormData] = useState({ 
-        question1: '', 
-        question2: '',
-        response1: null,
-        response2: null
+    // Form data structure
+    const [formData, setFormData] = useState({
+        questions: [
+            {
+                text: '',
+                voiceResponse: null, // { data: Buffer, contentType: string, duration: number }
+                transcript: null
+            },
+            {
+                text: '',
+                voiceResponse: null,
+                transcript: null
+            }
+        ]
     });
-    
     const [errors, setErrors] = useState({});
+
+    // Hook
     const { recordingId, isRecording, startRecording, stopRecording } = useAudioRecorder();
 
-    // Initialize form when survey prop changes (edit mode)
+    // Initialize form
     useEffect(() => {
         if (mode === 'edit' && survey) {
             setFormData({
-                question1: survey.questions[0]?.text || '',
-                question2: survey.questions[1]?.text || '',
-                response1: survey.questions[0]?.voiceResponse || null,
-                response2: survey.questions[1]?.voiceResponse || null
+                questions: [
+                survey.questions[0] || { text: '', voiceResponse: null, transcript: null },
+                survey.questions[1] || { text: '', voiceResponse: null, transcript: null }
+                ]
             });
-        } else {
-            setFormData({ 
-                question1: '', 
-                question2: '',
-                response1: null,
-                response2: null
+            } else {
+            setFormData({
+                questions: [
+                { text: '', voiceResponse: null, transcript: null },
+                { text: '', voiceResponse: null, transcript: null }
+                ]
             });
         }
     }, [mode, survey]);
 
     // Handle input changes
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+    const handleQuestionChange = (e, questionIndex) => {
+        const { value } = e.target;
+        setFormData(prev => {
+            const updatedQuestions = [...prev.questions];
 
-        // Clear error when user types
-        if (errors[name]) {
-            setErrors(prev => ({ ...prev, [name]: '' }));
+            updatedQuestions[questionIndex] = {
+              ...updatedQuestions[questionIndex],
+              text: value
+            };
+            return { ...prev, questions: updatedQuestions };
+          });
+
+        // Clear error
+        if (errors[`question${questionIndex + 1}`]) {
+        setErrors(prev => ({ ...prev, [`question${questionIndex + 1}`]: '' }));
         }
     };
 
     // Handle audio recording for responses
-    const handleAudioRecording = async (questionNum) => {
-        const fieldName = `response${questionNum}`;
-        const questionAudioId = `${mode}-${questionNum}`; // Unique ID for each question
+    const handleAudioRecording = async (questionIndex) => {
+        const fieldName = `response${questionIndex}`;
+        const questionAudioId = `${mode}-${questionIndex}`; // Unique ID for each question
         
         // Stop recording
         if (isRecording && recordingId === questionAudioId) {
             const audioBlob = await stopRecording();
             if (!audioBlob) return;
 
+            // Convert Blob to ArrayBuffer then to Buffer-like object
+            const arrayBuffer = await audioBlob.arrayBuffer();
+            const audioBuffer = Buffer.from(arrayBuffer);
+            const duration = await calculateAudioDuration(audioBlob);
+
             // Save blob recording
-            setFormData(prev => ({
-                ...prev,
-                [fieldName]: audioBlob
-            }));
+            setFormData(prev => {
+                const updatedQuestions = [...prev.questions];
+
+                updatedQuestions[questionIndex] = {
+                    ...updatedQuestions[questionIndex],
+                    voiceResponse: {
+                        data: audioBuffer,
+                        contentType: audioBlob.type || 'audio/webm',
+                        duration: duration
+                    }
+                };
+                return { ...prev, questions: updatedQuestions };
+              });
             
         // Start recording
         } else {
@@ -79,8 +108,13 @@ export default function SurveyPopup({ mode, survey, onClose, onSave }) {
     // Validate form
     const validate = () => {
         const newErrors = {};
-        if (!formData.question1.trim()) newErrors.question1 = 'Question 1 is required';
-        if (!formData.question2.trim()) newErrors.question2 = 'Question 2 is required';
+
+        // Check all questions 
+        formData.questions.forEach((question, index) => {
+            if (!question.text.trim()) {
+                newErrors[`question${index + 1}`] = `Question ${index + 1} is required`;
+            }
+        });
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -88,40 +122,56 @@ export default function SurveyPopup({ mode, survey, onClose, onSave }) {
     // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault(); // Prevents default form submission behavior
-        
         if (!validate()) return;
 
+        console.log("im submittinggg ", formData.questions[0]?.voiceResponse);
         try {
-            const surveyData = {
-                questions: [
-                    { 
-                        text: formData.question1, 
-                        voiceResponse: formData.response1 || null,
-                        transcript: null 
-                    },
-                    { 
-                        text: formData.question2, 
-                        voiceResponse: formData.response2 || null,
-                        transcript: null 
-                    }
-                ]
+            // Compress audio data if needed
+            const compressedSurveyData = {
+                questions: await Promise.all(
+                    formData.questions.map(async (question) => ({
+                        text: question.text,
+                        voiceResponse: question.voiceResponse?.data
+                            ? {
+                                data: await compressAudioData(question.voiceResponse.data),
+                                contentType: question.voiceResponse.contentType,
+                                duration: question.voiceResponse.duration
+                                }
+                            : null
+                    }))
+                )
             };
 
-            console.log("Survey Data", surveyData);
-
-            let result;
-            if (mode === 'edit') {
-                result = await surveyService.updateSurvey(survey._id, surveyData);
-            } else {
-                result = await surveyService.createSurvey(surveyData);
-            }
+            const result = mode === 'edit'
+                ? await surveyService.updateSurvey(survey._id, compressedSurveyData)
+                : await surveyService.createSurvey(compressedSurveyData);
             
             onSave(result);
             onClose();
         } catch (error) {
             console.error(`${mode === 'edit' ? 'Update' : 'Create'} survey error:`, error);
-            alert(error.message || `Failed to ${mode} survey`);
         }
+    };
+
+    // Function : Calculate durationa
+    const calculateAudioDuration = async (blob) => {
+        return new Promise((resolve) => {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const fileReader = new FileReader();
+        
+            fileReader.onload = function() {
+                audioContext.decodeAudioData(this.result)
+                .then(buffer => {
+                    resolve(buffer.duration);
+                })
+                .catch(() => {
+                    // Fallback estimation if decode fails
+                    resolve(blob.size / (16000 * 2)); // Rough estimate
+                });
+            };
+        
+            fileReader.readAsArrayBuffer(blob);
+        });
     };
 
     return (
@@ -133,82 +183,53 @@ export default function SurveyPopup({ mode, survey, onClose, onSave }) {
                     </h2>
                     
                     <form onSubmit={handleSubmit}>
-                        {/* Question 1 */}
-                        <div className="mb-4">
-                            <label className="block text-gray-700 mb-2" htmlFor="question1">
-                                Question 1
-                            </label>
-                            <input
-                                type="text"
-                                id="question1"
-                                name="question1"
-                                value={formData.question1}
-                                onChange={handleChange}
-                                className={`survey-popup-input ${errors.question1 ? 'border-red-500' : 'border-gray-300'}`}
-                                placeholder="Enter first question"
-                            />
-                            {errors.question1 && (
-                                <p className="survey-popup-error">{errors.question1}</p>
-                            )}
-                        
-                            <div className="survey-popup-audio-section">
-                                <label className="survey-popup-audio-label">
-                                    Response 1 (Audio)
+                        {formData.questions.map((question, index) => (
+                            <div key={index} className={`mb-${index === 0 ? '4' : '6'}`}>
+                                <label className="block text-gray-700 mb-2" htmlFor={`question${index + 1}`}>
+                                    Question {index + 1}
                                 </label>
-                                <div className="survey-popup-recording-btn">
-                                    <RecordingButton
-                                        isRecording={isRecording}
-                                        onStart={() => handleAudioRecording(1)}
-                                        onStop={() => handleAudioRecording(1)}
-                                        disabled={isRecording && recordingId !== `${mode}-1`}
-                                        recordingId={recordingId}
-                                        currentId={`${mode}-1`}
-                                    />
-                                    {formData.response1 && (
-                                        <AudioPlayer audioBlob={formData.response1} />
-                                    )}
+                                <input
+                                    type="text"
+                                    id={`question${index + 1}`}
+                                    name={`question${index + 1}`}
+                                    value={question.text}
+                                    onChange={(e) => handleQuestionChange(e, index)}
+                                    className={`survey-popup-input ${
+                                        errors[`question${index + 1}`] ? 'border-red-500' : 'border-gray-300'
+                                    }`}
+                                    placeholder={`Enter question ${index + 1}`}
+                                />
+                                {errors[`question${index + 1}`] && (
+                                    <p className="survey-popup-error">{errors[`question${index + 1}`]}</p>
+                                )}
+                            
+                                <div className="survey-popup-audio-section">
+                                    <label className="survey-popup-audio-label">
+                                        Response {index + 1} (Audio)
+                                    </label>
+                                    <div className="survey-popup-recording-btn">
+                                        <RecordingButton
+                                            isRecording={isRecording}
+                                            onStart={() => handleAudioRecording(index)}
+                                            onStop={() => handleAudioRecording(index)}
+                                            disabled={isRecording && recordingId !== `${mode}-${index}`}
+                                            recordingId={recordingId}
+                                            currentId={`${mode}-${index}`}
+                                            duration={question.voiceResponse?.duration}
+                                            maxDuration={60}
+                                        />
+                                        {question.voiceResponse && (
+                                            <div className="mt-2">
+                                                <AudioPlayer voiceResponse={question.voiceResponse} />
+                                                {/* <p className="text-sm text-gray-500 mt-1">
+                                                    Duration: {question.voiceResponse.duration?.toFixed(1) || 0}s
+                                                </p> */}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-
-                        {/* Question 2 */}
-                        <div className="mb-6">
-                            <label className="block text-gray-700 mb-2" htmlFor="question2">
-                                Question 2
-                            </label>
-                            <input
-                                type="text"
-                                id="question2"
-                                name="question2"
-                                value={formData.question2}
-                                onChange={handleChange}
-                                className={`survey-popup-input ${errors.question2 ? 'border-red-500' : 'border-gray-300'}`}
-                                placeholder="Enter second question"
-                            />
-                            {errors.question2 && (
-                                <p className="survey-popup-error">{errors.question2}</p>
-                            )}
-                        
-                            <div className="survey-popup-audio-section">
-                                <label className="survey-popup-audio-label">
-                                    Response 2 (Audio)
-                                </label>
-                                <div className="survey-popup-recording-btn">
-                                    <RecordingButton
-                                        isRecording={isRecording}
-                                        onStart={() => handleAudioRecording(2)}
-                                        onStop={() => handleAudioRecording(2)}
-                                        disabled={isRecording && recordingId !== `${mode}-2`}
-                                        recordingId={recordingId}
-                                        currentId={`${mode}-2`}
-                                    />
-                                    {formData.response2 && (
-                                        <AudioPlayer audioUrl={formData.response2} />
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-
+                        ))}
                         <div className="survey-popup-actions">
                             <button
                                 type="button"

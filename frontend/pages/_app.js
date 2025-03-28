@@ -6,6 +6,7 @@ import "../styles/adminDashboard.css";
 import "../styles/settings.css"
 import "../styles/navbar.css";
 import "../styles/AboutMe.css";
+import "../styles/audio.css";
 
 export default function MyApp({ Component, pageProps }) {
     return (

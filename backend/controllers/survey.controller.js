@@ -11,9 +11,30 @@ const createSurvey = async (req, res) =>{
         }
 
         // Ensure each question has a text field
-        for (const question of questions) {
+        for (const [index, question] of questions.entries()) {
+
+            // Validate text field (qs)
             if (!question.text) {
-                return res.status(400).json({ message: "Each question must have a text field." });
+                return res.status(400).json({ message: `Question ${index + 1}: Text is required and must be a string.` });
+            }
+
+            // Validate voiceResponse
+            if (question.voiceResponse) {
+
+                // Validate data
+                if (!question.voiceResponse.data) {
+                    return res.status(400).json({
+                        message: `Question ${index + 1}: voiceResponse must contain data.`
+                    });
+                }
+
+                // Validate duration (if present)
+                if (question.voiceResponse.duration && 
+                    (typeof question.voiceResponse.duration !== 'number' || question.voiceResponse.duration <= 0)) {
+                    return res.status(400).json({
+                        message: `Question ${index + 1}: Duration must be a positive number.`
+                    });
+                }
             }
         }
       
