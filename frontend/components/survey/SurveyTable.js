@@ -2,8 +2,8 @@ import { useState
   , useEffect } from 'react';
 
 import SurveyPopup from './SurveyFormPopup';
-import { surveyService } from '../services/surveyService';
-import { useAudioRecorder } from '../hooks/useAudioRecorder';
+import { surveyService } from '../../services/surveyService';
+import { useAudioRecorder } from '../../hooks/useAudioRecorder';
 import SurveyAnswer from './SurveyAnswer';
 
 

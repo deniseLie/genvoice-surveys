@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { surveyService } from "../services/surveyService";
-import RecordingButton from "./RecordingButton";
-import AudioPlayer from "./AudioPlayer";
-import { useAudioRecorder } from "../hooks/useAudioRecorder";
+import { surveyService } from "../../services/surveyService";
+import RecordingButton from "../audio/RecordingButton";
+import AudioPlayer from "../audio/AudioPlayer";
+import { useAudioRecorder } from "../../hooks/useAudioRecorder";
 
 export default function SurveyPopup({ mode, survey, onClose, onSave }) {
     
